@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+    <div id="canvasHost"></div>
+
+
+    <script type="application/javascript">
+
+      var width = 100;
+      var height = 100;
+
+      // create a CanvaPix instance, with the parent div ID in param
+      var cpix = new CanvasPix("canvasHost");
+
+      // init with size and color
+      cpix.initBlank( {w: width, h: height}, {r: 29, g: 100, b: 200, a: 255} );
+
+      /*
+      // Or init with size, default color is rgba(0,0,0,0)
+      cpix.initBlank( {w: 100, h: 100} );
+      cpix.fill( {r: 29, g: 100, b: 200, a: 255} )
+      */
+
+      /*
+      // set a color for this specific pixel
+      cpix.setPixel(
+        {x: 0, y:0},  // position
+        {r: 255, g: 0, b: 0, a: 255} // color
+      );
+      */
+
+      /*
+      // get the pixel color
+      var color = cpix.getPixel( {x: 0, y:0} );
+      console.log(color);
+      */
+
+      // change the color of each pixel, using its position
+      // to create a grandient
+      cpix.forEachPixel( function( position, color){
+
+        return {
+          r: (position.x / width) * 255,
+          g: (position.y / height) * 255,
+          b: 0,
+          a: 255
+        }
+
+      })
+
+
+      // change the color of each pixel, based on the color already present
+      // in each current pixel.
+      cpix.forEachPixel( function( position, color){
+
+        return {
+          r: 255 - color.r,
+          g: color.g,
+          b: 255 - color.g,
+          a: 255
+        }
+
+      })
+
+
+
+    </script>
+
+
+  </body>
+</html>

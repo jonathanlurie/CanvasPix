@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+    <div id="canvasHost"></div>
+
+
+    <script type="application/javascript">
+
+      var cpix = new CanvasPix("canvasHost");
+
+      // load an image
+      cpix.initWithImage(
+        "../images/rhino.jpg",  // image URL
+
+        // callback once the image is loaded
+        function(){
+
+
+          // NOTE: possible only if the loaded image is on a server that
+          // allow CORS
+          cpix.setPixel(
+            {x: 0, y:0},
+            {r: 255, g: 0, b: 0, a: 255}
+          );
+
+          // NOTE: possible only if the loaded image is on a server that
+          // allow CORS
+          // get a color from a specific position
+          var color = cpix.getPixel(
+            {x: 1, y:0}
+          );
+          console.log(color);
+
+        }
+      );
+
+
+
+
+
+    </script>
+
+
+  </body>
+</html>
