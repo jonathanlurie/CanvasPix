@@ -155,13 +155,62 @@ class CanvasPix{
 
   /**
   * Apply a treatment for each pixel
-  * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}
+  * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}. The callback must return an Object {r, g, b, a} or null. If null is returned by the callback, the color remains unchanged.
   */
   forEachPixel(cb){
+    var firstPixel = 0;
+    var lastPixel = this._canvas.width * this._canvas.height;
+    var increment = 1;
+
+    this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+  }
+
+
+  /**
+  * Apply a treatment for each pixel of a single line
+  * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}. The callback must return an Object {r, g, b, a} or null. If null is returned by the callback, the color remains unchanged.
+  */
+  forEachPixelOfLine(lineIndex, cb){
+    if( lineIndex >= this._canvas.height){
+      console.warn("The line " + lineIndex + " is outside.");
+      return;
+    }
+
+    var firstPixel = lineIndex*this._canvas.width;
+    var lastPixel = firstPixel + this._canvas.width;
+    var increment = 1;
+
+    this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+  }
+
+
+  /**
+  * Apply a treatment for each pixel of a single row
+  * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}. The callback must return an Object {r, g, b, a} or null. If null is returned by the callback, the color remains unchanged.
+  */
+  forEachPixelOfRow(rowIndex, cb){
+    if( rowIndex >= this._canvas.width){
+      console.warn("The line " + rowIndex + " is outside.");
+      return;
+    }
+
+    var firstPixel = rowIndex;
+    var lastPixel = firstPixel + this._canvas.height * (this._canvas.width);
+    var increment = this._canvas.width;
+
+    this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+  }
+
+
+  /**
+  * [PRIVATE]
+  * generic function for painting row, colum or whole
+  */
+  _forEachPixelOfSuch(firstPixel, lastPixel, increment, cb ){
     var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
     var data = imageData.data;
 
-    for(var p=0; p<data.length / this._ncpp; p++){
+    for(var p=firstPixel; p<lastPixel; p+=increment ){
       var firstCompoPos1D = p * this._ncpp;
       var position2D = this.getImagePosition(p);
 
@@ -174,11 +223,12 @@ class CanvasPix{
 
       var newColor = cb( position2D, currentColor);
 
-      data[firstCompoPos1D] = newColor.r
-      data[firstCompoPos1D + 1] = newColor.g;
-      data[firstCompoPos1D + 2] = newColor.b;
-      data[firstCompoPos1D + 3] = newColor.a;
-
+      if(newColor){
+        data[firstCompoPos1D] = newColor.r
+        data[firstCompoPos1D + 1] = newColor.g;
+        data[firstCompoPos1D + 2] = newColor.b;
+        data[firstCompoPos1D + 3] = newColor.a;
+      }
     }
 
     this._ctx.putImageData(imageData, 0, 0);

@@ -41,6 +41,7 @@
       console.log(color);
       */
 
+
       // change the color of each pixel, using its position
       // to create a grandient
       cpix.forEachPixel( function( position, color){
@@ -53,8 +54,9 @@
         }
 
       })
+      
 
-
+      /*
       // change the color of each pixel, based on the color already present
       // in each current pixel.
       cpix.forEachPixel( function( position, color){
@@ -67,8 +69,30 @@
         }
 
       })
+      */
 
+      /*
+      // paint a special line
+      cpix.forEachPixelOfLine( 99, function(){
+        return {
+          r: 255,
+          g: 0,
+          b: 0,
+          a: 255
+        }
+      });
+      */
 
+      /*
+      cpix.forEachPixelOfRow( 51, function(){
+        return {
+          r: 255,
+          g: 0,
+          b: 0,
+          a: 255
+        }
+      });
+      */
 
     </script>
 
