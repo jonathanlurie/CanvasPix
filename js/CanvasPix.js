@@ -14,6 +14,8 @@ class CanvasPix{
     this._ctx = null;
     this._ncpp = 4; // number of components per pixel, rgba
 
+    this._dataBuffer = null;
+
     if(id){
       this._canvas.id = id;
     }
@@ -115,15 +117,24 @@ class CanvasPix{
   setPixel(position, color){
     if( this.isInside(position)){
       var LinearPosition = this.getLinearPosition(position);
-      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
-      var data = imageData.data;
+
+      var data = null;
+
+      if(this._dataBuffer){
+        data = this._dataBuffer.data;
+      }else{
+        var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+        data = imageData.data;
+      }
 
       data[LinearPosition] = color.r;
       data[LinearPosition + 1] = color.g;
       data[LinearPosition + 2] = color.b;
       data[LinearPosition + 3] = color.a;
 
-      this._ctx.putImageData(imageData, 0, 0);
+      if(! this._dataBuffer){
+        this._ctx.putImageData(imageData, 0, 0);
+      }
 
     }else{
       console.warn("position (" + x + "; " + y + ") is outside.");
@@ -137,8 +148,16 @@ class CanvasPix{
   getPixel(position){
     if( this.isInside(position)){
       var LinearPosition = this.getLinearPosition(position);
-      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
-      var data = imageData.data;
+
+      var data = null;
+
+      if(this._dataBuffer){
+        data = this._dataBuffer.data;
+      }else{
+        var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+        data = imageData.data;
+      }
+
 
       return {
         r: data[LinearPosition],
@@ -147,7 +166,7 @@ class CanvasPix{
         a: data[LinearPosition + 3]
       }
     }else{
-      console.warn("position (" + x + "; " + y + ") is outside.");
+      console.warn("position (" + position.x + "; " + position.y + ") is outside.");
       return null;
     }
   }
@@ -170,7 +189,7 @@ class CanvasPix{
   * Apply a treatment for each pixel of a single line
   * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}. The callback must return an Object {r, g, b, a} or null. If null is returned by the callback, the color remains unchanged.
   */
-  forEachPixelOfLine(lineIndex, cb){
+  forEachPixelOfRow(lineIndex, cb){
     if( lineIndex >= this._canvas.height){
       console.warn("The line " + lineIndex + " is outside.");
       return;
@@ -188,7 +207,7 @@ class CanvasPix{
   * Apply a treatment for each pixel of a single row
   * @param {function} cb - the callback is called with 2 arguments: the current position {x, y} and the current color {r, g, b, a}. The callback must return an Object {r, g, b, a} or null. If null is returned by the callback, the color remains unchanged.
   */
-  forEachPixelOfRow(rowIndex, cb){
+  forEachPixelOfColumn(rowIndex, cb){
     if( rowIndex >= this._canvas.width){
       console.warn("The line " + rowIndex + " is outside.");
       return;
@@ -207,8 +226,17 @@ class CanvasPix{
   * generic function for painting row, colum or whole
   */
   _forEachPixelOfSuch(firstPixel, lastPixel, increment, cb ){
-    var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
-    var data = imageData.data;
+
+    var data = null;
+
+    if(this._dataBuffer){
+      data = this._dataBuffer.data;
+    }else{
+      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+      data = imageData.data;
+    }
+
+
 
     for(var p=firstPixel; p<lastPixel; p+=increment ){
       var firstCompoPos1D = p * this._ncpp;
@@ -231,8 +259,26 @@ class CanvasPix{
       }
     }
 
-    this._ctx.putImageData(imageData, 0, 0);
+    if(!this._dataBuffer){
+      this._ctx.putImageData(imageData, 0, 0);
+    }
   }
 
+
+  /**
+  * Load only once the image buffer, then use it for image modification
+  */
+  enableActiveBuffer(){
+    this._dataBuffer = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+  }
+
+
+  /**
+  * Close the active buffer so that its content is written back to the canva data.
+  */
+  closeActiveBuffer(){
+    this._ctx.putImageData(this._dataBuffer, 0, 0);
+    this._dataBuffer = null;
+  }
 
 } /* END class CanvasPix */

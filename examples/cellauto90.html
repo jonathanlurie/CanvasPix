@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <style>
+
+      body {
+        background-color: #CCC;
+      }
+
+    </style>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+    <div id="canvasHost"></div>
+
+
+    <script type="application/javascript">
+
+      var rule90 = [
+        {
+          in: [1, 1, 1],
+          out: 0
+        },
+        {
+          in: [1, 1, 0],
+          out: 1
+        },
+        {
+          in: [1, 0, 1],
+          out: 0
+        },
+        {
+          in: [1, 0, 0],
+          out: 1
+        },
+        {
+          in: [0, 1, 1],
+          out: 1
+        },
+        {
+          in: [0, 1, 0],
+          out: 0
+        },
+        {
+          in: [0, 0, 1],
+          out: 1
+        },
+        {
+          in: [0, 0, 0],
+          out: 0
+        },
+      ];
+
+      var matchColor0 = {r: 0, g: 0, b: 0, a: 255};
+      var matchColor1 = {r: 255, g: 255, b: 255, a: 255};
+
+
+      // return true if 2 colors are the same
+      function isSameColor(c1, c2 ){
+        return (c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a);
+      }
+
+
+      /**
+      * says if a rule and a patter matches
+      * @param {Array} pattern - a pattern "in" from the automaton rule
+      * @param {Array} colors - Array of 3 colors (left, center, right)
+      * @return {Boolean} true if match, false if not.
+      * It uses the matchColor1 and matchColor0.
+      */
+      function rulePatternMatch( pattern, colors ){
+        var patternColors = [
+          pattern[0] == 0? matchColor0 : matchColor1,
+          pattern[1] == 0? matchColor0 : matchColor1,
+          pattern[2] == 0? matchColor0 : matchColor1
+        ];
+
+
+
+        return (isSameColor( patternColors[0], colors[0]) &&
+                      isSameColor( patternColors[1], colors[1]) &&
+                      isSameColor( patternColors[2], colors[2]) );
+      }
+
+
+
+      function whichRule( rule, colors ){
+        for(var p=0; p<rule.length; p++){
+          if( rulePatternMatch(rule[p].in, colors) ){
+            return p;
+          }
+        }
+      }
+
+
+
+
+
+      var width = 1000;
+      var height = 1000;
+
+      // create a CanvaPix instance, with the parent div ID in param
+      var cpix = new CanvasPix("canvasHost");
+
+      // init with size and color
+      cpix.initBlank( {w: width, h: height}, {r: 255, g: 255, b: 255, a: 255} );
+
+      cpix.enableActiveBuffer();
+
+      // paint the first line
+      cpix.setPixel({x: width/2, y: 0}, {r: 0, g: 0, b: 0, a: 255});
+
+
+      /*
+      cpix.forEachPixelOfRow( 0, function( position, color ){
+        // random
+        //return (Math.round( Math.random()) == 0? matchColor0 : matchColor1);
+
+        // odd and even
+        return (position.x % 2 == 0? matchColor0 : matchColor1);
+      });
+      */
+
+
+
+      for(var l=1; l<height; l++){
+
+        console.log( l + " / " + height);
+
+        // paint the first line
+        cpix.forEachPixelOfRow( l, function( position, color ){
+
+          // first and last
+          if(position.x == 0 || position.x == width - 1){
+            return null;
+          }
+
+          var leftColor = cpix.getPixel({
+            x: position.x - 1,
+            y: position.y - 1
+          });
+
+          var centerColor = cpix.getPixel({
+            x: position.x,
+            y: position.y - 1
+          });
+
+          var rightColor = cpix.getPixel({
+            x: position.x + 1,
+            y: position.y - 1
+          });
+
+          var ruleIndex = whichRule( rule90, [leftColor, centerColor, rightColor]);
+          //console.log(ruleIndex);
+
+          return (rule90[ruleIndex].out == 0? matchColor0 : matchColor1);
+
+        });
+
+      }
+
+
+      cpix.closeActiveBuffer();
+
+
+
+
+
+    </script>
+
+
+  </body>
+</html>

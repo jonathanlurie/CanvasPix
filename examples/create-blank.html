@@ -12,8 +12,8 @@
 
     <script type="application/javascript">
 
-      var width = 100;
-      var height = 100;
+      var width = 5000;
+      var height = 5000;
 
       // create a CanvaPix instance, with the parent div ID in param
       var cpix = new CanvasPix("canvasHost");
@@ -41,7 +41,7 @@
       console.log(color);
       */
 
-
+      /*
       // change the color of each pixel, using its position
       // to create a grandient
       cpix.forEachPixel( function( position, color){
@@ -54,7 +54,8 @@
         }
 
       })
-      
+      */
+
 
       /*
       // change the color of each pixel, based on the color already present
@@ -71,9 +72,10 @@
       })
       */
 
-      /*
+
+
       // paint a special line
-      cpix.forEachPixelOfLine( 99, function(){
+      cpix.forEachPixelOfColumn( 99, function(){
         return {
           r: 255,
           g: 0,
@@ -81,7 +83,8 @@
           a: 255
         }
       });
-      */
+
+
 
       /*
       cpix.forEachPixelOfRow( 51, function(){
