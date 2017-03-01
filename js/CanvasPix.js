@@ -221,8 +221,14 @@ class CanvasPix{
   }
 
 
-
-  fillFromSeed( seed, thresholdFunction, acceptedFunction, rejectedFunction){
+  /**
+  * Start from a seed and navigate to North-South-East-West.
+  * Each new pixel (starting from the seed) must satisfy the currentSelectionCb function (with position in args), this determine if they are accepted of rejected. This callback must return true or false.
+  * For each new pixel accepted, acceptedCb will be called (with position in args).
+  * For each pixel rejected, rejectedCb will be called (with position in args).
+  * For each new candidate North-South-East-West, allowNewCandidateCb will be called with 2 args: current position and candidate position. Must return true or false.
+  */
+  fromSeed( seed, currentSelectionCb, acceptedCb, rejectedCb, allowNewCandidateCb){
     var that = this;
 
     // an array to mark where the filling algorithm has already been
@@ -244,35 +250,35 @@ class CanvasPix{
       var currentPixel = pixelStack.pop();
       setMaskValue( currentPixel , 1);
 
-      if( thresholdFunction( currentPixel ) ){
-        acceptedFunction( currentPixel );
+      if( currentSelectionCb( currentPixel ) ){
+        acceptedCb( currentPixel );
 
         // add North
         var n = {x:currentPixel.x, y:currentPixel.y+1}
-        if(!getMaskValue(n) && this.isInside(n) ){
+        if(!getMaskValue(n) && this.isInside(n) && allowNewCandidateCb(currentPixel, n) ){
           pixelStack.push( n );
         }
 
         // add South
         var s = {x:currentPixel.x, y:currentPixel.y-1};
-        if(!getMaskValue(s) && this.isInside(s) ){
+        if(!getMaskValue(s) && this.isInside(s) && allowNewCandidateCb(currentPixel, s) ){
           pixelStack.push( s );
         }
 
         // add West
         var w = {x:currentPixel.x-1, y:currentPixel.y};
-        if(!getMaskValue(w) &&  this.isInside(w) ){
+        if(!getMaskValue(w) &&  this.isInside(w) && allowNewCandidateCb(currentPixel, w) ){
           pixelStack.push( w );
         }
 
         // add East
         var e = {x:currentPixel.x+1, y:currentPixel.y};
-        if(!getMaskValue(e) &&  this.isInside(e) ){
+        if(!getMaskValue(e) &&  this.isInside(e) && allowNewCandidateCb(currentPixel, e) ){
           pixelStack.push( e );
         }
 
       }else{
-        rejectedFunction( currentPixel );
+        rejectedCb( currentPixel );
 
       }
 

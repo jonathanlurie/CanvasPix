@@ -4,8 +4,38 @@
     <meta charset="utf-8"/>
 
     <style>
+
       body{
         background-color: pink;
+      }
+
+      #topPanel{
+        position: absolute;
+        width: 600px;
+        height: 200px;
+
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+
+      #canvasHost{
+
+      }
+
+      #colorTolerance {
+        width: 512px;
+      }
+
+      #colorProximity {
+        width: 512px;
+      }
+
+      form {
+        margin: 30px;
+      }
+
+      span,
+      label {
+        color: white;
       }
 
     </style>
@@ -14,116 +44,184 @@
 
   </head>
   <body>
+    <div id="topPanel">
+      <form>
+        <label for="colorTolerance">Color tolerance</label>
+        <span id="colorToleranceValue">57</span>
+        <input id="colorTolerance" type="range" name="points" min="0" max="255" step="1" value="57" onchange="updateColorTolerance(this.value)">
+      </form>
+      <form>
+        <label for="colorProximity">Color proximity</label>
+        <span id="colorProximityValue">1.2</span>
+        <input id="colorProximity" type="range" name="points" min="1" max="1.5" step="0.01" value="1.2" onchange="updateColorProximity(this.value)">
+      </form>
+    </div>
+
     <div id="canvasHost"></div>
 
 
     <script type="application/javascript">
 
       var cpix = new CanvasPix("canvasHost");
-
-      // load an image
-      cpix.initWithImage(
-        "../images/cell.jpg",  // image URL
-
-        // callback once the image is loaded
-        function(){
-          var height = cpix.getHeight();
-          var width = cpix.getWidth();
-
-          var seeds = [
-            //{x: 10, y:10},
-            {x: 1010, y:250},
-            {x: 1760, y:260},
-            {x: 1420, y:625},
-            {x: 1950, y:640}
-          ];
-
-          var furthestPositions = [];
+      var colorProximity = 1.2;
+      var colorTolerance = 57;
 
 
+      function init(){
+        // load an image
+        cpix.initWithImage(
+          //"../images/realCells.jpg",  // image URL
+          "../images/realCells_blur11.png",
+
+          // callback once the image is loaded
+          run
+        );
+      }
 
 
-
-          cpix.enableActiveBuffer();
+      function updateColorProximity(cp){
+        colorProximity = cp;
+        document.getElementById("colorProximityValue").textContent = cp;
+        init();
+        run();
+      }
 
 
 
-          // strict threshold at 128
-          cpix.forEachPixel( function( position, color){
+      function updateColorTolerance(ct){
+        colorTolerance = ct;
+        document.getElementById("colorToleranceValue").textContent = ct;
+        init();
+        run();
+      }
 
-            var newColor = {r:0, g: 0, b:0, a:255};
 
-            if( color.r > 128){
-              newColor.r = 255;
-              newColor.g = 255;
-              newColor.b = 255;
-            }else{
-              newColor.r = 0;
-              newColor.g = 0;
-              newColor.b = 0;
+      function run(){
+        var height = cpix.getHeight();
+        var width = cpix.getWidth();
+
+        /*
+        var seeds = [
+          {x: 1010, y:257},
+          {x: 1760, y:260},
+          {x: 1420, y:625},
+          {x: 1957, y:640}
+        ];
+        */
+
+        var seeds = [
+          {x: 1156, y:786},
+          {x: 1004, y:771},
+          {x: 1324, y:734},
+          {x: 800, y:900},
+          {x: 1133, y:672},
+          {x: 1044, y:638},
+          {x: 824, y:829},
+          {x: 471, y:672},
+          {x: 564, y:620},
+        ];
+
+        var furthestPositions = [];
+
+        cpix.enableActiveBuffer();
+
+        /*
+        // strict threshold at 128
+        cpix.forEachPixel( function( position, color){
+
+          var newColor = {r:0, g: 0, b:0, a:255};
+
+          if( color.r > 128){
+            newColor.r = 255;
+            newColor.g = 255;
+            newColor.b = 255;
+          }else{
+            newColor.r = 0;
+            newColor.g = 0;
+            newColor.b = 0;
+          }
+          return newColor;
+
+        })
+        */
+
+        var t0 = performance.now();
+
+        // for each seed, find the furthest position
+        seeds.forEach( function(seed){
+
+          var longestDistance = 0;
+          var furthestFromSeed = {x:0, y:0};
+
+          cpix.fromSeed(
+            seed,
+
+            // test function
+            function( position ){
+              var color = cpix.getPixel( position );
+
+              // cell bodies are black
+              if(color && color.r < colorTolerance){
+
+                return true;
+              }else{
+                return false;
+              }
+            },
+
+            // test accepted
+            function( position ){
+              // distance from seed
+              var xd = position.x - seed.x;
+              var yd = position.y - seed.y;
+              var d = Math.sqrt( xd*xd + yd*yd);
+
+              if( d > longestDistance ){
+                longestDistance = d;
+                furthestFromSeed.x = position.x;
+                furthestFromSeed.y = position.y;
+              }
+            },
+
+            // test rejected, nothing to be done here...
+            function( position ){ },
+
+            // select candidate NSEW
+            function(fromPos, toPos){
+              var fromColor = cpix.getPixel( fromPos );
+              var toColor = cpix.getPixel( toPos );
+
+              // we only consider moveing along the gradient, to a lighter color
+              // (or at least to the same)
+              if( /*(fromColor.r <= toColor.r) &&*/ (toColor.r / fromColor.r < colorProximity) ){
+                return true;
+              }else{
+                return false;
+              }
             }
-            return newColor;
 
-          })
+          )
 
-          var t0 = performance.now();
+          furthestPositions.push( furthestFromSeed );
 
-          // for each seed, find the furthest position
-          seeds.forEach( function(seed){
+        });
 
-            var longestDistance = 0;
-            var furthestFromSeed = {x:0, y:0};
+        var t1 = performance.now();
+
+        cpix.closeActiveBuffer();
+
+        // showing vector
+        seeds.forEach( function(seed, index){
+          cpix.drawLine(seed, furthestPositions[index])
+        })
+
+        console.log("Detecting directions took " + (t1 - t0) + " milliseconds.");
+
+      }
 
 
-            cpix.fillFromSeed( seed,
-              // test function
-              function( position ){
-                var color = cpix.getPixel( position );
 
-                // cell bodies are black
-                if(color && color.r < 128){
-
-                  return true;
-                }else{
-                  return false;
-                }
-              },
-
-              // test accepted
-              function( position ){
-                // distance from seed
-                var xd = position.x - seed.x;
-                var yd = position.y - seed.y;
-                var d = Math.sqrt( xd*xd + yd*yd);
-
-                if( d > longestDistance ){
-                  longestDistance = d;
-                  furthestFromSeed.x = position.x;
-                  furthestFromSeed.y = position.y;
-                }
-              },
-
-              // test rejected, nothing to be done here...
-              function( position ){ }
-            )
-
-            furthestPositions.push( furthestFromSeed );
-
-          });
-
-          var t1 = performance.now();
-
-          cpix.closeActiveBuffer();
-
-          // showing vector
-          seeds.forEach( function(seed, index){
-            cpix.drawLine(seed, furthestPositions[index])
-          })
-
-          console.log("Detecting directions took " + (t1 - t0) + " milliseconds.");
-
-        }
-      );
+      init();
 
 
 
