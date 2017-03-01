@@ -221,6 +221,68 @@ class CanvasPix{
   }
 
 
+
+  fillFromSeed( seed, thresholdFunction, acceptedFunction, rejectedFunction){
+    var that = this;
+
+    // an array to mark where the filling algorithm has already been
+    var mask = new Int8Array( this._canvas.width * this._canvas.height );
+
+    function getMaskValue( position ){
+      return mask[ position.y * that._canvas.width + position.x];
+    }
+
+    function setMaskValue( position, value ){
+      mask[ position.y * that._canvas.width + position.x] = value;
+    }
+
+    // stack used for the fillin algorithm
+    var pixelStack = [];
+    pixelStack.push( seed );
+
+    while(pixelStack.length > 0){
+      var currentPixel = pixelStack.pop();
+      setMaskValue( currentPixel , 1);
+
+      if( thresholdFunction( currentPixel ) ){
+        acceptedFunction( currentPixel );
+
+        // add North
+        var n = {x:currentPixel.x, y:currentPixel.y+1}
+        if(!getMaskValue(n) && this.isInside(n) ){
+          pixelStack.push( n );
+        }
+
+        // add South
+        var s = {x:currentPixel.x, y:currentPixel.y-1};
+        if(!getMaskValue(s) && this.isInside(s) ){
+          pixelStack.push( s );
+        }
+
+        // add West
+        var w = {x:currentPixel.x-1, y:currentPixel.y};
+        if(!getMaskValue(w) &&  this.isInside(w) ){
+          pixelStack.push( w );
+        }
+
+        // add East
+        var e = {x:currentPixel.x+1, y:currentPixel.y};
+        if(!getMaskValue(e) &&  this.isInside(e) ){
+          pixelStack.push( e );
+        }
+
+      }else{
+        rejectedFunction( currentPixel );
+
+      }
+
+
+
+
+    }
+  }
+
+
   /**
   * [PRIVATE]
   * generic function for painting row, colum or whole
@@ -279,6 +341,33 @@ class CanvasPix{
   closeActiveBuffer(){
     this._ctx.putImageData(this._dataBuffer, 0, 0);
     this._dataBuffer = null;
+  }
+
+
+  /**
+  * @return {Number} the width of the canvas
+  */
+  getWidth(){
+    return this._canvas.width;
+  }
+
+
+  /**
+  * @return {Number} the height of the canvas
+  */
+  getHeight(){
+    return this._canvas.height;
+  }
+
+  drawLine(from, to, color="#FF0000", thickness=2){
+    this._ctx.beginPath();
+    this._ctx.moveTo(from.x, from.y);
+    this._ctx.lineTo(to.x, to.y);
+    this._ctx.lineWidth = thickness;
+
+    // set line color
+    this._ctx.strokeStyle = color;
+    this._ctx.stroke();
   }
 
 } /* END class CanvasPix */

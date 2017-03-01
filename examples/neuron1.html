@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <style>
+      body{
+        background-color: pink;
+      }
+
+    </style>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+    <div id="canvasHost"></div>
+
+
+    <script type="application/javascript">
+
+      var cpix = new CanvasPix("canvasHost");
+
+      // load an image
+      cpix.initWithImage(
+        "../images/cell.jpg",  // image URL
+
+        // callback once the image is loaded
+        function(){
+          var height = cpix.getHeight();
+          var width = cpix.getWidth();
+
+          var seeds = [
+            //{x: 10, y:10},
+            {x: 1010, y:250},
+            {x: 1760, y:260},
+            {x: 1420, y:625},
+            {x: 1950, y:640}
+          ];
+
+          var furthestPositions = [];
+
+
+
+
+
+          cpix.enableActiveBuffer();
+
+
+
+          // strict threshold at 128
+          cpix.forEachPixel( function( position, color){
+
+            var newColor = {r:0, g: 0, b:0, a:255};
+
+            if( color.r > 128){
+              newColor.r = 255;
+              newColor.g = 255;
+              newColor.b = 255;
+            }else{
+              newColor.r = 0;
+              newColor.g = 0;
+              newColor.b = 0;
+            }
+            return newColor;
+
+          })
+
+          var t0 = performance.now();
+
+          // for each seed, find the furthest position
+          seeds.forEach( function(seed){
+
+            var longestDistance = 0;
+            var furthestFromSeed = {x:0, y:0};
+
+
+            cpix.fillFromSeed( seed,
+              // test function
+              function( position ){
+                var color = cpix.getPixel( position );
+
+                // cell bodies are black
+                if(color && color.r < 128){
+
+                  return true;
+                }else{
+                  return false;
+                }
+              },
+
+              // test accepted
+              function( position ){
+                // distance from seed
+                var xd = position.x - seed.x;
+                var yd = position.y - seed.y;
+                var d = Math.sqrt( xd*xd + yd*yd);
+
+                if( d > longestDistance ){
+                  longestDistance = d;
+                  furthestFromSeed.x = position.x;
+                  furthestFromSeed.y = position.y;
+                }
+              },
+
+              // test rejected, nothing to be done here...
+              function( position ){ }
+            )
+
+            furthestPositions.push( furthestFromSeed );
+
+          });
+
+          var t1 = performance.now();
+
+          cpix.closeActiveBuffer();
+
+          // showing vector
+          seeds.forEach( function(seed, index){
+            cpix.drawLine(seed, furthestPositions[index])
+          })
+
+          console.log("Detecting directions took " + (t1 - t0) + " milliseconds.");
+
+        }
+      );
+
+
+
+
+
+    </script>
+
+
+  </body>
+</html>
