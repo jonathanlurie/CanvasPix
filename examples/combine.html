@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <style>
+
+      body{
+        background-color: pink;
+      }
+
+
+      #canvasHost2{
+
+      }
+
+
+    </style>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+
+    <p>
+      <div id="canvasHost1"></div>
+    </p>
+
+    <p>
+      <div id="canvasHost2"></div>
+    </p>
+
+    <p>
+      <div id="canvasHost3"></div>
+    </p>
+
+
+    <script type="application/javascript">
+
+      var cpix1 = new CanvasPix("canvasHost1");
+      var cpix1Ready = false;
+      var cpix2 = new CanvasPix("canvasHost2");
+      var cpix2Ready = false;
+
+      var cpixCombine = new CanvasPix("canvasHost3");
+
+      function init(){
+        // load an image
+        cpix1.initWithImage(
+          "../images/realCells_small.jpg",  // image URL
+          //"../images/square_small.png",  // image URL
+          // callback once the image is loaded
+          runImg1
+        );
+
+        // load an image
+        cpix2.initWithImage(
+          "../images/realCells_small.jpg",  // image URL
+          //"../images/square_small.png",  // image URL
+          // callback once the image is loaded
+          runImg2
+        );
+
+      }
+
+
+      function runImg1(){
+        // enable us to play with the internal buffer without pop and push
+        cpix1.enableActiveBuffer();
+
+
+        // silly edge detection
+        cpix1.applyFilter([
+          [5, 10, 5],
+          [0, 0, 0],
+          [-5, -10, -5],
+        ]);
+
+        // open buffer party is over!
+        cpix1.closeActiveBuffer();
+        cpix1Ready = true;
+
+        console.log("cpix1 done");
+        combine();
+      }
+
+
+      function runImg2(){
+        // enable us to play with the internal buffer without pop and push
+        cpix2.enableActiveBuffer();
+
+        // silly edge detection
+        cpix2.applyFilter([
+          [5, 0, -5],
+          [10, 0, -10],
+          [5, 0, -5],
+        ]);
+
+        // open buffer party is over!
+        cpix2.closeActiveBuffer();
+        cpix2Ready = true;
+        console.log("cpix1 done");
+        combine();
+      }
+
+
+      function combine(){
+        // Quit if only one is ready
+        if( !(cpix1Ready && cpix2Ready) ){
+          return;
+        }
+
+        console.log("start combining");
+
+        cpixCombine.initBlank( {w: cpix1.getWidth(), h: cpix1.getHeight()}, {r:255, g:255, b:0, a:255});
+
+        cpix1.enableActiveBuffer();
+        cpix2.enableActiveBuffer();
+        cpixCombine.enableActiveBuffer();
+
+        cpixCombine.combine(
+          [cpix1, cpix2],
+          [0.5, 0.5]
+        )
+
+        cpixCombine.closeActiveBuffer();
+        cpix1.closeActiveBuffer();
+        cpix2.closeActiveBuffer();
+      }
+
+      init();
+
+    </script>
+
+
+  </body>
+</html>

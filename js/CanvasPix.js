@@ -479,4 +479,69 @@ class CanvasPix{
 
 
 
+  getRawCopy(){
+    var data = null;
+    if(this._dataBuffer){
+      data = this._dataBuffer.data;
+    }else{
+      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+      data = imageData.data;
+    }
+
+    return data.slice();
+  }
+
+
+  /**
+  *
+  */
+  getRawValue(index){
+    var data = null;
+    if(this._dataBuffer){
+      data = this._dataBuffer.data;
+    }else{
+      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+      data = imageData.data;
+    }
+
+    return data[ index ];
+  }
+
+
+  /**
+  * Combine canvasPixes using weights.
+  * @param {Array} canvasPixes - array of CanvasPix instances
+  * @param {Array} weights - array of Numbers. Sum should be 1.
+  */
+  combine( canvasPixes, weights ){
+    "use strict"
+
+    var data = null;
+
+    if(this._dataBuffer){
+      data = this._dataBuffer.data;
+    }else{
+      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+      data = imageData.data;
+    }
+
+    var progress = 0;
+
+    // start blending the data
+    for(var i=0; i<data.length; i++){
+      var blentValue = 0;
+      canvasPixes.forEach(function(cpix, index){
+        blentValue += cpix.getRawValue(i) * weights[index];
+      })
+      data[i] = blentValue;
+
+    }
+
+    // refreshing the context if not in active buffer mode
+    if(! this._dataBuffer){
+      this._ctx.putImageData(imageData, 0, 0);
+    }
+  }
+
+
 } /* END class CanvasPix */
