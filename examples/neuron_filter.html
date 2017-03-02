@@ -35,14 +35,13 @@
         cpix.initWithImage(
           //"../images/realCells.jpg",  // image URL
           //"../images/realCells_blur11.png",
+          //"../images/square_small.png",
           "../images/rhino.jpg",
 
           // callback once the image is loaded
           run
         );
       }
-
-
 
 
       function run(){
@@ -52,7 +51,10 @@
         var height = cpix.getHeight();
         var width = cpix.getWidth();
 
+        var t0 = performance.now();
+
         /*
+        // a median filter
         cpix.applyFilter([
           [1/9, 1/9, 1/9],
           [1/9, 1/9, 1/9],
@@ -60,7 +62,8 @@
         ]);
         */
 
-        var t0 = performance.now();
+
+        // a gaussian filter
         cpix
         .applyFilter([
           [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067],
@@ -70,7 +73,18 @@
           [0.00019117, 0.00655965, 0.05472157, 0.11098164, 0.05472157, 0.00655965, 0.00019117],
           [0.00002292, 0.00078633, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
           [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067]
-        ])
+        ], true);
+
+
+        /*
+        // silly edge detection
+        cpix.applyFilter([
+          [1, 0, -1],
+          [2, 0, -2],
+          [1, 0, -1],
+        ]);
+        */
+
         var t1 = performance.now();
         console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
 
@@ -78,13 +92,7 @@
         cpix.closeActiveBuffer();
       }
 
-
-
       init();
-
-
-
-
 
     </script>
 

@@ -194,6 +194,8 @@ class CanvasPix{
     var increment = 1;
 
     this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+
+    return this;
   }
 
 
@@ -212,6 +214,8 @@ class CanvasPix{
     var increment = 1;
 
     this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+
+    return this;
   }
 
 
@@ -230,6 +234,8 @@ class CanvasPix{
     var increment = this._canvas.width;
 
     this._forEachPixelOfSuch(firstPixel, lastPixel, increment, cb );
+
+    return this;
   }
 
 
@@ -294,6 +300,8 @@ class CanvasPix{
       }
 
     }
+
+    return this;
   }
 
 
@@ -384,15 +392,28 @@ class CanvasPix{
     // set line color
     this._ctx.strokeStyle = color;
     this._ctx.stroke();
+
+    return this;
   }
+
 
 
   /**
   * Apply a filter on the image.
   * filter {Array} filter - actually a squared 2D array with Numbers in it
+  * padWithZeros {Boolean} padWithZeros - if true, use 0 to fill the edges, if true, uses data from the original image
   */
-  applyFilter( filter ){
+  applyFilter( filter, padWithZeros=false ){
     var that = this;
+
+    var data = null;
+
+    if(this._dataBuffer){
+      data = this._dataBuffer.data;
+    }else{
+      var imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+      data = imageData.data;
+    }
 
     var filterSize = filter.length;
     var filterHalfSize = Math.floor( filterSize / 2 );
@@ -403,37 +424,14 @@ class CanvasPix{
 
     // temporary array to store filtered value so that it does not mess with
     // the actual image
-    var tempImg = [
-      new Float32Array( this._canvas.width * this._canvas.height ),
-      new Float32Array( this._canvas.width * this._canvas.height ),
-      new Float32Array( this._canvas.width * this._canvas.height )
-    ]
-    tempImg[0].fill(0);
-    tempImg[1].fill(0);
-    tempImg[2].fill(0);
+    var tempImg = null;
 
-    // set the image data
-    function setTempImgValue(chanelIndex, position, value ){
-      tempImg[chanelIndex][ position.y * that._canvas.width + position.x] = value;
+    if(padWithZeros){
+      tempImg = new Float32Array(data.length);
+      tempImg.fill(0);
+    }else{
+      tempImg = new Float32Array(data);
     }
-
-    // sum the existing color with the color in args
-    function sumToTempImg(position, color ){
-      tempImg[0][ position.y * that._canvas.width + position.x] += color.r;
-      tempImg[1][ position.y * that._canvas.width + position.x] += color.g;
-      tempImg[2][ position.y * that._canvas.width + position.x] += color.b;
-    }
-
-    function getColorTempImage(position){
-      return {
-        r: tempImg[0][ position.y * that._canvas.width + position.x],
-        g: tempImg[1][ position.y * that._canvas.width + position.x],
-        b: tempImg[2][ position.y * that._canvas.width + position.x],
-        a: 255
-      }
-    }
-
-
 
     // along image width
     for(var iImg=startX ; iImg<endX; iImg++){
@@ -441,46 +439,44 @@ class CanvasPix{
       // along image height
       for(var jImg=startY ; jImg<endY; jImg++){
 
+        // get position of RED in a 1D array
+        var linearPosition = this.getLinearPosition({x:iImg, y:jImg});
+
+        // init at 0
+        tempImg[ linearPosition ] = 0; // red
+        tempImg[ linearPosition + 1 ] = 0; // green
+        tempImg[ linearPosition + 2 ] = 0; // blue
+        tempImg[ linearPosition + 3 ] = 255; // alpha
+
         // along filter width
         for(var iFilter=0; iFilter<filterSize; iFilter++){
           // along filter height
           for(var jFilter=0; jFilter<filterSize; jFilter++){
-
             var iUnderFilter = iImg + iFilter - filterHalfSize;
             var jUnderFilter = jImg + jFilter - filterHalfSize;
-
             var colorUnderFilter = this.getPixel({x: iUnderFilter, y: jUnderFilter});
 
-            var filteredColor = {
-              r: colorUnderFilter.r * filter[iFilter][jFilter],
-              g: colorUnderFilter.g * filter[iFilter][jFilter],
-              b: colorUnderFilter.b * filter[iFilter][jFilter],
-              a: colorUnderFilter.a * filter[iFilter][jFilter],
-            }
-
-            sumToTempImg({x: iImg, y: jImg}, filteredColor)
-            //console.log( tempImg[0][ jImg * this._canvas.width + iImg] );
+            tempImg[ linearPosition ] += colorUnderFilter.r * filter[iFilter][jFilter]; // red
+            tempImg[ linearPosition + 1 ] += colorUnderFilter.g * filter[iFilter][jFilter]; // green
+            tempImg[ linearPosition + 2 ] += colorUnderFilter.b * filter[iFilter][jFilter]; // blue
           }
         }
       }
     }
 
+    // copy data from temp to regular
+    tempImg.forEach( function(value, index){
+      data[ index ] = value;
+    })
 
-    // copy the values from temp arrays to the actual canva data
-    for(var iImg=startX ; iImg<endX; iImg++){
-      for(var jImg=startY ; jImg<endY; jImg++){
-        var position = {x: iImg, y: jImg};
-        var newColor = getColorTempImage(position);
-
-        this.setPixel(
-          position,
-          newColor
-        )
-
-      }
+    // refreshing the context if not in active buffer mode
+    if(! this._dataBuffer){
+      this._ctx.putImageData(imageData, 0, 0);
     }
 
     return this;
   }
+
+
 
 } /* END class CanvasPix */
