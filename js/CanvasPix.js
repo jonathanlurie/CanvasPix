@@ -369,6 +369,14 @@ class CanvasPix{
 
 
   /**
+  * @returns {Boolean} true if the the active buffer is enabled, false if disabled
+  */
+  isActiveBufferEnabled(){
+    return !(this._dataBuffer == null);
+  }
+
+
+  /**
   * @return {Number} the width of the canvas
   */
   getWidth(){
@@ -514,7 +522,7 @@ class CanvasPix{
   * @param {Array} weights - array of Numbers. Sum should be 1.
   */
   combine( canvasPixes, weights ){
-    "use strict"
+
 
     var data = null;
 
@@ -525,7 +533,18 @@ class CanvasPix{
       data = imageData.data;
     }
 
-    var progress = 0;
+    // so that we can enable it but also reset to the original state at the end of this function
+    var activeBufferEnabled = [];
+
+    for(var c=0; c<canvasPixes.length; c++){
+      activeBufferEnabled[c] = canvasPixes[c].isActiveBufferEnabled();
+
+      // if not enabled, we enable it
+      if(!activeBufferEnabled[c]){
+        canvasPixes[c].enableActiveBuffer();
+      }
+    }
+
 
     // start blending the data
     for(var i=0; i<data.length; i++){
@@ -541,6 +560,15 @@ class CanvasPix{
     if(! this._dataBuffer){
       this._ctx.putImageData(imageData, 0, 0);
     }
+
+    // reseting the original state of active buffer
+    for(var c=0; c<canvasPixes.length; c++){
+      // if not enabled, we enable it
+      if(!activeBufferEnabled[c]){
+        canvasPixes[c].closeActiveBuffer();
+      }
+    }
+
   }
 
 

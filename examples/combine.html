@@ -9,12 +9,6 @@
         background-color: pink;
       }
 
-
-      #canvasHost2{
-
-      }
-
-
     </style>
 
     <script src="../js/CanvasPix.js" type="application/javascript"></script>
@@ -64,6 +58,7 @@
       }
 
 
+      // filter the first image
       function runImg1(){
         // enable us to play with the internal buffer without pop and push
         cpix1.enableActiveBuffer();
@@ -85,6 +80,7 @@
       }
 
 
+      // filter the 2nd image
       function runImg2(){
         // enable us to play with the internal buffer without pop and push
         cpix2.enableActiveBuffer();
@@ -104,6 +100,7 @@
       }
 
 
+      // combine the 2 filtered image in a 3rd one
       function combine(){
         // Quit if only one is ready
         if( !(cpix1Ready && cpix2Ready) ){
@@ -112,10 +109,8 @@
 
         console.log("start combining");
 
-        cpixCombine.initBlank( {w: cpix1.getWidth(), h: cpix1.getHeight()}, {r:255, g:255, b:0, a:255});
+        cpixCombine.initBlank( {w: cpix1.getWidth(), h: cpix1.getHeight()});
 
-        cpix1.enableActiveBuffer();
-        cpix2.enableActiveBuffer();
         cpixCombine.enableActiveBuffer();
 
         cpixCombine.combine(
@@ -124,8 +119,6 @@
         )
 
         cpixCombine.closeActiveBuffer();
-        cpix1.closeActiveBuffer();
-        cpix2.closeActiveBuffer();
       }
 
       init();
