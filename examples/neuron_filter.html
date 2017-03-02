@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <style>
+
+      body{
+        background-color: pink;
+      }
+
+
+      #canvasHost{
+
+      }
+
+
+    </style>
+
+    <script src="../js/CanvasPix.js" type="application/javascript"></script>
+
+  </head>
+  <body>
+
+    <div id="canvasHost"></div>
+
+
+    <script type="application/javascript">
+
+      var cpix = new CanvasPix("canvasHost");
+
+
+      function init(){
+        // load an image
+        cpix.initWithImage(
+          //"../images/realCells.jpg",  // image URL
+          //"../images/realCells_blur11.png",
+          "../images/rhino.jpg",
+
+          // callback once the image is loaded
+          run
+        );
+      }
+
+
+
+
+      function run(){
+        // enable us to play with the internal buffer without pop and push
+        cpix.enableActiveBuffer();
+
+        var height = cpix.getHeight();
+        var width = cpix.getWidth();
+
+        /*
+        cpix.applyFilter([
+          [1/9, 1/9, 1/9],
+          [1/9, 1/9, 1/9],
+          [1/9, 1/9, 1/9],
+        ]);
+        */
+
+        var t0 = performance.now();
+        cpix
+        .applyFilter([
+          [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067],
+          [0.00002292, 0.00078634, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
+          [0.00019117, 0.00655965, 0.05472157, 0.11098164, 0.05472157, 0.00655965, 0.00019117],
+          [0.00038771, 0.01330373, 0.11098164, 0.22508352, 0.11098164, 0.01330373, 0.00038771],
+          [0.00019117, 0.00655965, 0.05472157, 0.11098164, 0.05472157, 0.00655965, 0.00019117],
+          [0.00002292, 0.00078633, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
+          [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067]
+        ])
+        var t1 = performance.now();
+        console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+
+        // open buffer party is over!
+        cpix.closeActiveBuffer();
+      }
+
+
+
+      init();
+
+
+
+
+
+    </script>
+
+
+  </body>
+</html>
