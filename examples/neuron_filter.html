@@ -33,10 +33,10 @@
       function init(){
         // load an image
         cpix.initWithImage(
-          //"../images/realCells.jpg",  // image URL
+          "../images/realCells.jpg",  // image URL
           //"../images/realCells_blur11.png",
           //"../images/square_small.png",
-          "../images/rhino.jpg",
+          //"../images/rhino.jpg",
 
           // callback once the image is loaded
           run
@@ -62,7 +62,7 @@
         ]);
         */
 
-
+        /*
         // a gaussian filter
         cpix
         .applyFilter([
@@ -74,14 +74,34 @@
           [0.00002292, 0.00078633, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
           [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067]
         ], true);
-
+        */
 
         /*
         // silly edge detection
         cpix.applyFilter([
-          [1, 0, -1],
-          [2, 0, -2],
-          [1, 0, -1],
+          [5, 0, -5],
+          [10, 0, -10],
+          [5, 0, -5],
+        ]);
+        */
+
+
+        // silly edge detection
+        cpix.applyFilter([
+          [5, 10, 5],
+          [0, 0, 0],
+          [-5, -10, -5],
+        ]);
+        
+
+        /*
+        // a larger sobel
+        cpix.applyFilter([
+          [5,   2.5,  0,   -2.5,    -5],
+          [7.5, 3.75, 0, -3.75, -7.5],
+          [10,   5,    0,    -5,    -10],
+          [7.5, 3.75, 0, -3.75, -7.5],
+          [5,   2.5,  0,   -2.5,    -5],
         ]);
         */
 
